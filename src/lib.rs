@@ -16,7 +16,11 @@ impl Iterator for Fibonacci {
     fn next(&mut self) -> Option<Self::Item> {
         let val = self.fn_2;
         self.fn_2 = self.fn_1;
-        self.fn_1 += val;
+        // Don't panic. Instead of overflowing, repeat the same number.
+        self.fn_1 = match self.fn_1.checked_add(val) {
+            Some(sum) => sum,
+            None => self.fn_1,
+        };
         Some(val)
     }
 }
@@ -39,8 +43,8 @@ mod tests {
     fn test_sequence() {
         let fib = Fibonacci::default();
 
-        let expected: Vec<u8> = vec![0, 1, 1, 2];
-        let result: Vec<u8> = fib.take(4).collect();
+        let expected: Vec<u8> = vec![0, 1, 1, 2, 3];
+        let result: Vec<u8> = fib.take(5).collect();
 
         // Take 5 fibonacci numbers and put them into a vector.
         assert_eq!(result, expected);
@@ -49,6 +53,7 @@ mod tests {
     #[test]
     fn test_overflow_check() {
         let fib = Fibonacci::default();
-        let _: Vec<u8> = fib.take(200).collect();
+        let sequence: Vec<u8> = fib.take(200).collect();
+        assert_eq!(sequence[198], sequence[199]);
     }
 }
